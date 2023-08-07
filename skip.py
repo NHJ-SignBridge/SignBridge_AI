@@ -74,6 +74,7 @@ while True:
 
     ret, frame = cap.read()
 
+
     if show_start_message:
         text = "Show your hand to start the quiz"
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -88,6 +89,9 @@ while True:
         cv2.putText(frame, text, (text_x, text_y), font, font_scale, font_color, thickness)
 
     H, W, _ = frame.shape
+
+    instructions = "Press 's' to skip the current question and 'q' to end this quiz"
+    cv2.putText(frame, instructions, (20, H - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 51), 2)
 
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -120,7 +124,6 @@ while True:
                 data_aux.append(x - min(x_))
                 data_aux.append(y - min(y_))
     
-    
 
         x1 = int(min(x_) * W) - 10
         y1 = int(min(y_) * H) - 10
@@ -144,7 +147,6 @@ while True:
         font_color = (255, 255, 51)
         thickness = 2
         cv2.putText(frame, text, position, font, font_scale, font_color, thickness)
-
 
 
         # Check if the user made the correct gesture
