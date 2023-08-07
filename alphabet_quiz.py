@@ -1,6 +1,6 @@
 import pickle
 import random
-import time 
+import time
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -63,6 +63,11 @@ hands = mp_hands.Hands(static_image_mode=True, min_detection_confidence=0.3)
 
 labels_dict = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 
                8: 'I', 9: 'J', 10: 'K', 11: 'L', 12: 'M', 13: 'N', 14: 'O', 15: 'P', 16: 'Q', 17: 'R', 18: 'S', 19: 'T', 20: 'U', 21: 'V', 22: 'W', 23: 'X', 24: 'Y', 25: 'Z'}
+
+# Initialize constants
+skip_button_width = 100
+skip_button_height = 50
+
 while True:
 
     data_aux = []
@@ -70,6 +75,27 @@ while True:
     y_ = []
 
     ret, frame = cap.read()
+
+    # Calculate skip button coordinates for top-right corner
+    frame_height, frame_width, _ = frame.shape
+    skip_button_x = frame_width - skip_button_width
+    skip_button_y = 0
+    
+    # Fill the skip button area with white background
+    button_background = (255, 255, 255)  # White color in BGR
+    frame[skip_button_y:skip_button_y + skip_button_height, skip_button_x:skip_button_x + skip_button_width] = button_background
+    
+    # Draw the border of the skip button area
+    cv2.rectangle(frame, (skip_button_x, skip_button_y), (skip_button_x + skip_button_width, skip_button_y + skip_button_height), (0, 0, 0), 2)
+    
+    # Add "Skip" text inside the skip button area
+    text = "Skip"
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    text_size = cv2.getTextSize(text, font, 1, 2)[0]
+    text_x = skip_button_x + (skip_button_width - text_size[0]) // 2
+    text_y = skip_button_y + (skip_button_height + text_size[1]) // 2
+    cv2.putText(frame, text, (text_x, text_y), font, 1, (0, 0, 0), 2, cv2.LINE_AA)
+
 
     if show_start_message:
             text = "Show your hand to start the quiz"
@@ -130,13 +156,7 @@ while True:
         cv2.putText(frame, predicted_character, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3,
                     cv2.LINE_AA)
         
-        text = "Sign " + current_alphabet + "."
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        position = (50, 50)
-        font_scale = 1
-        font_color = (255, 255, 51)
-        thickness = 2
-        cv2.putText(frame, text, position, font, font_scale, font_color, thickness)
+        
 
         # Check if the user made the correct gesture
         # 사용자가 맞는 수어를 보였는지 확인합니다
@@ -161,10 +181,24 @@ while True:
             thickness = 2
             cv2.putText(frame, text, position, font, font_scale, font_color, thickness)
 
-        # Display the next question after 3 seconds
-        # 3초 뒤에 다음 문제로 넘어갑니다
-        if time.time() - next_question_time >= 3:
-            text = "Sign " + current_alphabet + "."
+         # Check if the "Skip" button is pressed to show the next question
+        if skip_button_x <= x <= skip_button_x + skip_button_width and skip_button_y <= y <= skip_button_y + skip_button_height:
+            current_alphabet = get_random_alphabet()
+
+        # Check if it's time to show the next question (either through correct answer or skip button)
+        if predicted_character == current_alphabet and not correct_answer_displayed or time.time() - next_question_time >= 3:
+            correct_answer_displayed = False
+            next_question_time = time.time()
+            current_alphabet = get_random_alphabet()
+        
+        text = "Sign " + current_alphabet + "."
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        position = (50, 50)
+        font_scale = 1
+        font_color = (255, 255, 51)
+        thickness = 2
+        cv2.putText(frame, text, position, font, font_scale, font_color, thickness)
+
 
         # Display the frame with overlaid text and hand landmarks
         cv2.imshow("Webcam", frame)
