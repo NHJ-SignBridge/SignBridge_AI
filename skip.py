@@ -36,6 +36,8 @@ import numpy as np
 model_dict = pickle.load(open('./model.p', 'rb'))
 model = model_dict['model']
 
+total = 0
+
 # Initialize the webcam, if not working properly, try changing 
 # the constant to 0, 1, or 2
 # 웹캠을 실행시킵니다. 만약 열리지 않는다면 숫자를 0, 1, 혹은 2로 바꿔주세요
@@ -160,6 +162,7 @@ while True:
             correct_answer_displayed = False
             next_question_time = time.time()
             current_alphabet = get_random_alphabet()
+            total += 1
 
         # Display "Correct!" message for 3 seconds
         # 정답 시 정답이라는 문구를 3초간 보여줍니다
@@ -182,13 +185,17 @@ while True:
         if skip_button_pressed:
             skipped.append(current_alphabet)
             current_alphabet = get_random_alphabet()
+            total += 1
 
         # Display the frame with overlaid text and hand landmarks
-        cv2.imshow("Webcam", frame)
+        # cv2.imshow("Webcam", frame)
 
         # Break the loop if the 'q' key is pressed
-        # q를 누를 시 프로그램을 종료합니다
+        # q를 누를 시 프로그램을 종료하고 정답률을 보고합니다
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            correct = total - len(skipped)
+            percentage = (correct / total) * 100
+            print("Correctness: " + percentage + "%")
             print("Skipped Alphabets: ", skipped)
             break
         
